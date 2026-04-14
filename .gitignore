@@ -1,0 +1,262 @@
+# LibraryFinder - Git Ignore Configuration
+
+# ==========================================
+# AWS & Terraform
+# ==========================================
+
+# Terraform files
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+!*.tfvars.example
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraform.lock.hcl
+.terraformrc
+terraform.rc
+
+# AWS credentials (NEVER commit these!)
+*.pem
+*.ppk
+.aws/
+aws-credentials.txt
+credentials
+config
+
+# ==========================================
+# Secrets & Environment Variables
+# ==========================================
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+
+# Secret files
+secrets/
+*.key
+*.secret
+*.credentials
+.secrets
+
+# API keys
+*api-key*
+*api_key*
+*apikey*
+
+# ==========================================
+# Node.js & JavaScript
+# ==========================================
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+.pnpm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Build outputs
+dist/
+build/
+*.bundle.js
+
+# ==========================================
+# Python
+# ==========================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# ==========================================
+# Docker
+# ==========================================
+
+# Docker files
+*.log
+.dockerignore
+
+# ==========================================
+# IDE & Editors
+# ==========================================
+
+# VS Code
+.vscode/
+*.code-workspace
+.history/
+
+# JetBrains IDEs (WebStorm, PyCharm, etc.)
+.idea/
+*.iml
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+.vim/
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ==========================================
+# Operating Systems
+# ==========================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ==========================================
+# Project Specific
+# ==========================================
+
+# Recordings (large files)
+docs/recordings/*.mp4
+docs/recordings/*.mov
+docs/recordings/*.avi
+!docs/recordings/README.md
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup
+
+# Database dumps
+*.sql
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Local development
+local/
+.local/
+
+# Cost reports
+cost-reports/
+*.csv
+
+# Sensitive docs
+NOTES.md
+TODO.md
+.private/
+
+# ==========================================
+# CI/CD
+# ==========================================
+
+# GitHub Actions
+.github/workflows/*.log
+
+# Test outputs
+test-results/
+playwright-report/
+test-output/
+
+# ==========================================
+# Security Scanning
+# ==========================================
+
+# Security scan results
+.trivy/
+.tfsec/
+.checkov/
+
+# Dependency scanning
+.snyk
+
+# ==========================================
+# Documentation
+# ==========================================
+
+# Generated docs
+site/
+_site/
+
+# ==========================================
+# Misc
+# ==========================================
+
+# Git attributes
+.gitattributes
+
+# Keep these files (explicitly allow)
+!.gitkeep
+!.env.example
+!terraform.tfvars.example
+!README.md
+!LICENSE
