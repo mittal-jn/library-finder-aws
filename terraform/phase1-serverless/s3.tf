@@ -1,4 +1,4 @@
-# LibraryFinder Phase 1 - S3 Bucket
+# LibraryFinder Phase 1 - S3 Bucket (Fixed)
 # Static website hosting for frontend
 
 # ==========================================
@@ -80,7 +80,7 @@ resource "aws_s3_bucket_website_configuration" "frontend" {
 }
 
 # ==========================================
-# S3 Bucket Lifecycle Policy
+# S3 Bucket Lifecycle Policy (Fixed)
 # ==========================================
 
 resource "aws_s3_bucket_lifecycle_configuration" "frontend" {
@@ -89,6 +89,11 @@ resource "aws_s3_bucket_lifecycle_configuration" "frontend" {
   rule {
     id     = "transition-old-versions"
     status = "Enabled"
+
+    # Add filter to satisfy AWS requirement
+    filter {
+      prefix = ""  # Apply to all objects
+    }
 
     noncurrent_version_transition {
       noncurrent_days = var.s3_lifecycle_days

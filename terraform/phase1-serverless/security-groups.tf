@@ -1,5 +1,6 @@
-# LibraryFinder Phase 1 - Security Groups
+# LibraryFinder Phase 1 - Security Groups (Fixed)
 # Firewall rules following least-privilege principle
+# Fixed: Removed circular dependency by using separate rules
 
 # ==========================================
 # Lambda Security Group
@@ -10,36 +11,40 @@ resource "aws_security_group" "lambda" {
   description = "Security group for Lambda functions"
   vpc_id      = aws_vpc.main.id
 
-  # Outbound to RDS
-  egress {
-    description     = "PostgreSQL to RDS"
-    from_port       = 5432
-    to_port         = 5432
-    protocol        = "tcp"
-    security_groups = [aws_security_group.rds.id]
-  }
-
-  # Outbound to HTTPS (for API calls, if needed)
-  egress {
-    description = "HTTPS outbound"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  # Outbound to HTTP (for API calls, if needed)
-  egress {
-    description = "HTTP outbound"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
   tags = {
     Name = "${var.project_name}-lambda-sg-${var.environment}"
   }
+}
+
+# Lambda egress rules (separate resources to avoid circular dependency)
+resource "aws_security_group_rule" "lambda_to_rds" {
+  type                     = "egress"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.lambda.id
+  source_security_group_id = aws_security_group.rds.id
+  description              = "PostgreSQL to RDS"
+}
+
+resource "aws_security_group_rule" "lambda_to_https" {
+  type              = "egress"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  security_group_id = aws_security_group.lambda.id
+  cidr_blocks       = ["0.0.0.0/0"]
+  description       = "HTTPS outbound"
+}
+
+resource "aws_security_group_rule" "lambda_to_http" {
+  type              = "egress"
+  from_port         = 80
+  to_port           = 80
+  protocol          = "tcp"
+  security_group_id = aws_security_group.lambda.id
+  cidr_blocks       = ["0.0.0.0/0"]
+  description       = "HTTP outbound"
 }
 
 # ==========================================
@@ -51,27 +56,31 @@ resource "aws_security_group" "rds" {
   description = "Security group for RDS PostgreSQL database"
   vpc_id      = aws_vpc.main.id
 
-  # Inbound from Lambda only
-  ingress {
-    description     = "PostgreSQL from Lambda"
-    from_port       = 5432
-    to_port         = 5432
-    protocol        = "tcp"
-    security_groups = [aws_security_group.lambda.id]
-  }
-
-  # No outbound needed for RDS typically
-  egress {
-    description = "No outbound required"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
   tags = {
     Name = "${var.project_name}-rds-sg-${var.environment}"
   }
+}
+
+# RDS ingress rule (separate resource to avoid circular dependency)
+resource "aws_security_group_rule" "rds_from_lambda" {
+  type                     = "ingress"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.rds.id
+  source_security_group_id = aws_security_group.lambda.id
+  description              = "PostgreSQL from Lambda"
+}
+
+# RDS egress rule
+resource "aws_security_group_rule" "rds_egress_all" {
+  type              = "egress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  security_group_id = aws_security_group.rds.id
+  cidr_blocks       = ["0.0.0.0/0"]
+  description       = "All outbound"
 }
 
 # ==========================================
@@ -83,24 +92,29 @@ resource "aws_security_group" "vpc_endpoints" {
   description = "Security group for VPC endpoints"
   vpc_id      = aws_vpc.main.id
 
-  # Inbound from Lambda
-  ingress {
-    description     = "HTTPS from Lambda"
-    from_port       = 443
-    to_port         = 443
-    protocol        = "tcp"
-    security_groups = [aws_security_group.lambda.id]
-  }
-
-  egress {
-    description = "All outbound"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
   tags = {
     Name = "${var.project_name}-vpc-endpoints-sg-${var.environment}"
   }
+}
+
+# VPC Endpoints ingress rule
+resource "aws_security_group_rule" "vpc_endpoints_from_lambda" {
+  type                     = "ingress"
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.vpc_endpoints.id
+  source_security_group_id = aws_security_group.lambda.id
+  description              = "HTTPS from Lambda"
+}
+
+# VPC Endpoints egress rule
+resource "aws_security_group_rule" "vpc_endpoints_egress_all" {
+  type              = "egress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  security_group_id = aws_security_group.vpc_endpoints.id
+  cidr_blocks       = ["0.0.0.0/0"]
+  description       = "All outbound"
 }

@@ -1,4 +1,4 @@
-# LibraryFinder Phase 1 - Outputs
+# LibraryFinder Phase 1 - Outputs (Fixed)
 # Important values displayed after terraform apply
 
 # ==========================================
@@ -79,12 +79,6 @@ output "rds_username" {
   sensitive   = true
 }
 
-output "rds_connection_string" {
-  description = "PostgreSQL connection string (without password)"
-  value       = "postgresql://${aws_db_instance.main.username}@${aws_db_instance.main.endpoint}/${aws_db_instance.main.db_name}"
-  sensitive   = true
-}
-
 # ==========================================
 # Security Group Outputs
 # ==========================================
@@ -141,7 +135,7 @@ output "estimated_monthly_cost" {
 }
 
 # ==========================================
-# Next Steps
+# Next Steps (Non-sensitive version)
 # ==========================================
 
 output "next_steps" {
@@ -153,8 +147,8 @@ output "next_steps" {
   Next Steps:
   
   1. TEST DATABASE CONNECTION:
-     psql -h ${aws_db_instance.main.address} -U ${aws_db_instance.main.username} -d ${aws_db_instance.main.db_name}
-     (You'll be prompted for password)
+     psql -h ${aws_db_instance.main.address} -U admin -d ${aws_db_instance.main.db_name}
+     (Password is in your terraform.tfvars file)
   
   2. UPLOAD FRONTEND TO S3:
      cd ../../../frontend
@@ -173,14 +167,13 @@ output "next_steps" {
 }
 
 # ==========================================
-# Quick Commands
+# Quick Commands (Non-sensitive version)
 # ==========================================
 
 output "useful_commands" {
   description = "Useful AWS CLI commands for this infrastructure"
   value = {
     sync_frontend_to_s3    = "aws s3 sync ./frontend s3://${aws_s3_bucket.frontend.id}/"
-    connect_to_database    = "psql -h ${aws_db_instance.main.address} -U ${aws_db_instance.main.username} -d ${aws_db_instance.main.db_name}"
     view_cloudwatch_logs   = "aws logs tail /aws/lambda/library-finder-search-api --follow"
     describe_rds_instance  = "aws rds describe-db-instances --db-instance-identifier ${aws_db_instance.main.identifier}"
   }
