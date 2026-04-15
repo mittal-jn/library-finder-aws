@@ -1,0 +1,14 @@
+{
+  "name": "library-finder-db-setup",
+  "version": "1.0.0",
+  "description": "Lambda function to set up LibraryFinder database tables",
+  "main": "index.js",
+  "dependencies": {
+    "pg": "^8.11.3"
+  },
+  "scripts": {
+    "test": "echo \"No tests yet\""
+  },
+  "author": "Mittal Jain",
+  "license": "MIT"
+}
