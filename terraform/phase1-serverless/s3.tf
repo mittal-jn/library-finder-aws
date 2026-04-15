@@ -1,0 +1,134 @@
+# LibraryFinder Phase 1 - S3 Bucket
+# Static website hosting for frontend
+
+# ==========================================
+# S3 Bucket for Frontend
+# ==========================================
+
+resource "aws_s3_bucket" "frontend" {
+  bucket = "${var.project_name}-frontend-${random_id.suffix.hex}"
+
+  tags = {
+    Name = "${var.project_name}-frontend-${var.environment}"
+    Purpose = "Frontend Static Website Hosting"
+  }
+}
+
+# ==========================================
+# S3 Bucket Versioning
+# ==========================================
+
+resource "aws_s3_bucket_versioning" "frontend" {
+  bucket = aws_s3_bucket.frontend.id
+
+  versioning_configuration {
+    status = var.enable_s3_versioning ? "Enabled" : "Suspended"
+  }
+}
+
+# ==========================================
+# S3 Bucket Public Access Block
+# ==========================================
+
+resource "aws_s3_bucket_public_access_block" "frontend" {
+  bucket = aws_s3_bucket.frontend.id
+
+  # Allow public read access for static website
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+# ==========================================
+# S3 Bucket Policy (Public Read Access)
+# ==========================================
+
+resource "aws_s3_bucket_policy" "frontend" {
+  bucket = aws_s3_bucket.frontend.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "PublicReadGetObject"
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = "s3:GetObject"
+        Resource  = "${aws_s3_bucket.frontend.arn}/*"
+      }
+    ]
+  })
+
+  depends_on = [aws_s3_bucket_public_access_block.frontend]
+}
+
+# ==========================================
+# S3 Bucket Website Configuration
+# ==========================================
+
+resource "aws_s3_bucket_website_configuration" "frontend" {
+  bucket = aws_s3_bucket.frontend.id
+
+  index_document {
+    suffix = "index.html"
+  }
+
+  error_document {
+    key = "index.html"  # SPA routing - always serve index.html
+  }
+}
+
+# ==========================================
+# S3 Bucket Lifecycle Policy
+# ==========================================
+
+resource "aws_s3_bucket_lifecycle_configuration" "frontend" {
+  bucket = aws_s3_bucket.frontend.id
+
+  rule {
+    id     = "transition-old-versions"
+    status = "Enabled"
+
+    noncurrent_version_transition {
+      noncurrent_days = var.s3_lifecycle_days
+      storage_class   = "STANDARD_IA"
+    }
+
+    noncurrent_version_expiration {
+      noncurrent_days = var.s3_lifecycle_days * 2
+    }
+  }
+
+  depends_on = [aws_s3_bucket_versioning.frontend]
+}
+
+# ==========================================
+# S3 Bucket CORS Configuration
+# ==========================================
+
+resource "aws_s3_bucket_cors_configuration" "frontend" {
+  bucket = aws_s3_bucket.frontend.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "HEAD"]
+    allowed_origins = ["*"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+}
+
+# ==========================================
+# S3 Bucket Encryption
+# ==========================================
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "frontend" {
+  bucket = aws_s3_bucket.frontend.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}

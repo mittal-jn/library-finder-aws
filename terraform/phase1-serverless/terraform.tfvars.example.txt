@@ -1,0 +1,54 @@
+# LibraryFinder Phase 1 - Configuration Example
+# Copy this file to terraform.tfvars and fill in your values
+# DO NOT commit terraform.tfvars to Git (it's in .gitignore)
+
+# ==========================================
+# REQUIRED: Database Password
+# ==========================================
+
+# IMPORTANT: Set a strong password (min 8 characters)
+db_password = "ChangeThisToASecurePassword123!"
+
+# ==========================================
+# Optional: Email for CloudWatch Alarms
+# ==========================================
+
+# Your email address for receiving alerts
+alarm_email = "your-email@example.com"
+
+# ==========================================
+# Optional: Override Defaults
+# ==========================================
+
+# Uncomment and modify these if you want to change defaults
+
+# AWS Region
+# aws_region = "us-east-1"
+
+# Environment
+# environment = "dev"
+
+# Database Configuration
+# db_instance_class = "db.t3.micro"
+# db_name = "libraryfinder"
+# db_username = "admin"
+# db_allocated_storage = 20
+# db_backup_retention_days = 7
+
+# Lambda Configuration
+# lambda_runtime = "nodejs20.x"
+# lambda_memory = 256
+# lambda_timeout = 30
+
+# Cost Control Flags
+# enable_nat_gateway = false      # Keep false to save ~$30/month
+# enable_multi_az_rds = false     # Keep false to save ~$15/month
+# enable_rds_encryption = true    # Keep true for security
+
+# Monitoring
+# enable_cloudwatch_logs = true
+# enable_detailed_monitoring = false
+
+# S3 Configuration
+# enable_s3_versioning = true
+# s3_lifecycle_days = 90
