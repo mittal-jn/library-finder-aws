@@ -22,7 +22,10 @@ function renderResults(libraries) {
 
   libraries.forEach((lib, index) => {
     // Generate website link
-    const website = lib.website || `https://www.google.com/search?q=${encodeURIComponent(lib.name + ' ' + lib.formatted_address)}`;
+    const website = lib.website || `https://www.google.com/search?q=${encodeURIComponent(lib.name + ' ' + lib.city + ' ' + lib.state)}`;
+    
+    // Format address
+    const formattedAddress = `${lib.address || ''}, ${lib.city}, ${lib.state} ${lib.zip_code}`.replace(/^, /, '');
     
     // Create library card
     const card = document.createElement('div');
@@ -30,14 +33,6 @@ function renderResults(libraries) {
     card.innerHTML = `
       <div class="flex justify-between items-start mb-3">
         <h4 class="text-lg font-semibold text-gray-800 flex-1">${lib.name}</h4>
-        ${lib.rating ? `
-          <div class="flex items-center gap-1 ml-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-            <span class="text-sm font-medium text-gray-600">${lib.rating}</span>
-          </div>
-        ` : ''}
       </div>
       
       <p class="text-sm text-gray-600 mb-3 flex items-start gap-2">
@@ -45,17 +40,15 @@ function renderResults(libraries) {
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
-        <span>${lib.formatted_address || lib.vicinity || 'Address not available'}</span>
+        <span>${formattedAddress}</span>
       </p>
       
-      ${lib.opening_hours ? `
-        <p class="text-sm mb-3 flex items-center gap-2">
+      ${lib.phone ? `
+        <p class="text-sm text-gray-600 mb-3 flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
           </svg>
-          <span class="${lib.opening_hours.open_now ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}">
-            ${lib.opening_hours.open_now ? 'Open Now' : 'Closed'}
-          </span>
+          <span>${lib.phone}</span>
         </p>
       ` : ''}
       
@@ -100,8 +93,19 @@ form.addEventListener('submit', (e) => {
     return;
   }
 
-  // Build search query
-  const query = `library in ${city} ${state} ${zip}`.trim();
+  // Build API URL
+  const params = new URLSearchParams();
+  if (city) params.append('city', city);
+  if (state) params.append('state', state);
+  if (zip) params.append('zip', zip);
+
+  const apiBaseUrl = window.APP_CONFIG?.apiUrl;
+  if (!apiBaseUrl) {
+    alert('API URL is not configured. Please set window.APP_CONFIG.apiUrl in index.html.');
+    return;
+  }
+
+  const apiUrl = `${apiBaseUrl}?${params.toString()}`;
   
   // Show loading indicator
   const loading = document.getElementById('loading-message');
@@ -109,48 +113,54 @@ form.addEventListener('submit', (e) => {
   loading.classList.remove('hidden');
   resultsList.innerHTML = '';
 
-  // Check if Google Maps API is loaded
-  if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
-    loading.classList.add('hidden');
-    resultsList.innerHTML = `
-      <div class="col-span-full text-center py-8 text-red-600">
-        <p class="text-lg font-semibold">Google Maps API not loaded</p>
-        <p class="text-sm mt-2">Please add your Google Maps API key to use the search feature.</p>
-      </div>
-    `;
-    return;
-  }
+  // Fetch from API
+  fetch(apiUrl, { mode: 'cors' })
+    .then(async response => {
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (parseError) {
+        throw new Error(`Invalid JSON response: ${text}`);
+      }
 
-  // Perform search using Google Places API
-  const service = new google.maps.places.PlacesService(document.createElement('div'));
-  
-  service.textSearch({ query }, (results, status) => {
-    loading.classList.add('hidden');
-    
-    if (status === google.maps.places.PlacesServiceStatus.OK) {
-      renderResults(results);
+      if (!response.ok) {
+        const errorMessage = data?.error || data?.Message || response.statusText || 'Request failed';
+        throw new Error(errorMessage);
+      }
+
+      return data;
+    })
+    .then(data => {
+      loading.classList.add('hidden');
       
-      // TODO: Send search analytics to backend API
-      // Example:
-      // fetch('/api/searches', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ city, state, zip, results_count: results.length })
-      // });
-      
-    } else {
+      if (data.success) {
+        renderResults(data.libraries);
+      } else {
+        resultsList.innerHTML = `
+          <div class="col-span-full text-center py-8">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-red-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p class="text-red-500 text-lg font-semibold">Search Error</p>
+            <p class="text-gray-600 text-sm mt-2">${data.error || 'Unknown error'}</p>
+          </div>
+        `;
+      }
+    })
+    .catch(error => {
+      loading.classList.add('hidden');
       resultsList.innerHTML = `
         <div class="col-span-full text-center py-8">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-red-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <p class="text-red-500 text-lg font-semibold">Search Error</p>
-          <p class="text-gray-600 text-sm mt-2">Status: ${status}</p>
-          <p class="text-gray-500 text-sm mt-1">Please try again or refine your search.</p>
+          <p class="text-red-500 text-lg font-semibold">Network Error</p>
+          <p class="text-gray-600 text-sm mt-2">${error.message || 'Please try again later.'}</p>
         </div>
       `;
-    }
-  });
+      console.error('Fetch error:', error);
+    });
 });
 
 // Smooth scroll for navigation links

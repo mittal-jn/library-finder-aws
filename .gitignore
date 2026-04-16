@@ -260,3 +260,16 @@ _site/
 !terraform.tfvars.example
 !README.md
 !LICENSE
+
+
+# Claude AI Assistant
+.claude/
+.claude-code/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Local environment
+.env
+.env.local
