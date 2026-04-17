@@ -1,0 +1,20 @@
+name: Hello World CI
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  say-hello:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print greeting
+        run: echo "Hello from LibraryFinder CI/CD!"
+
+      - name: Show the date
+        run: date
+
+      - name: Show who ran it
+        run: echo "Triggered by ${{ github.actor }} on branch ${{ github.ref_name }}"
