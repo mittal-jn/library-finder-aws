@@ -210,8 +210,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Mittal Jain**
 - GitHub: [@mittal-jn](https://github.com/mittal-jn)
-- LinkedIn: [Your LinkedIn]
-- Portfolio: [Your Portfolio URL]
+- LinkedIn: https://www.linkedin.com/in/mittaljain/
+- Portfolio: https://github.com/mittal-jn
 
 ## 🙏 Acknowledgments
 
