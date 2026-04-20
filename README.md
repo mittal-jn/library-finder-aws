@@ -172,19 +172,19 @@ npm test
 
 ## 🚀 Deployment Phases
 
-### Phase 1: Serverless Foundation (Current)
+### Phase 1: Serverless Foundation 
 - S3 static website
 - Lambda API functions
 - RDS PostgreSQL database
-- Basic monitoring
+- CloudWatch dashboards and alarms
 
-### Phase 2: Container Migration (Planned)
+### Phase 2: Container Migration
 - Migrate to EC2 + Docker
 - Application Load Balancer
 - Auto Scaling Groups
 - Enhanced monitoring
 
-### Phase 3: CI/CD Automation (Planned)
+### Phase 3: CI/CD Automation 
 - GitHub Actions workflows
 - Automated testing
 - Security scanning
