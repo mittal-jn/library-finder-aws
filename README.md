@@ -28,7 +28,7 @@ Users → CloudFront (CDN) → S3 (Frontend)
                     RDS PostgreSQL
 ```
 
-**Full architecture diagram:** [docs/architecture/diagrams/architecture.png](docs/architecture/diagrams/)
+
 
 ## 🚀 Technologies
 
