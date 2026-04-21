@@ -273,3 +273,4 @@ _site/
 # Local environment
 .env
 .env.local
+terraform/phase1-serverless/lambda-search-api.zip

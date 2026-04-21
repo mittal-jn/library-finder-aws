@@ -33,10 +33,31 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.9.0
+
+      - name: Build Lambda zip (required by Terraform)
+        run: |
+          cd ${{ env.LAMBDA_DIR }}
+          if [ -f package.json ] && [ ! -d node_modules ]; then
+            if [ -f package-lock.json ]; then
+              npm ci --omit=dev
+            else
+              npm install --omit=dev
+            fi
+          fi
+          cd - > /dev/null
+          zip -r ${{ env.TF_WORKING_DIR }}/lambda-search-api.zip \
+            ${{ env.LAMBDA_DIR }}/ \
+            -x "*.git*" "*test*" "*.env*"
+          ls -lh ${{ env.TF_WORKING_DIR }}/lambda-search-api.zip
 
       - name: Terraform Format Check
         working-directory: ${{ env.TF_WORKING_DIR }}
