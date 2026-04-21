@@ -1,227 +1,234 @@
-# LibraryFinder
+# LibraryFinder AWS
 
-> Production-ready AWS library discovery platform with automated infrastructure, comprehensive monitoring, and CI/CD pipelines.
+> A production-grade serverless library search application built on AWS — demonstrating end-to-end Infrastructure as Code, secure CI/CD, and production observability.
 
 [![AWS](https://img.shields.io/badge/AWS-Cloud-orange?logo=amazon-aws)](https://aws.amazon.com)
 [![Terraform](https://img.shields.io/badge/Terraform-IaC-7B42BC?logo=terraform)](https://www.terraform.io)
+[![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?logo=github-actions)](https://github.com/features/actions)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+---
 
 ## 🎯 Overview
 
-LibraryFinder is a cloud-native application that helps users discover public libraries across the United States. Built with AWS best practices, the platform demonstrates production-ready infrastructure patterns including:
+LibraryFinder is a cloud-native portfolio project that helps users discover public libraries. It's deliberately scoped to demonstrate production-ready AWS patterns across the full stack — not to ship a feature-complete product.
 
-- **Multi-tier architecture** with separated frontend, API, and data layers
-- **Infrastructure as Code** using Terraform modules
-- **Automated deployments** via CI/CD pipelines
-- **Comprehensive monitoring** with CloudWatch dashboards
-- **Cost-optimized** design staying within AWS Free Tier where possible
+**What this project demonstrates:**
+
+- **Infrastructure as Code** — every AWS resource defined in Terraform, deployable from a single `terraform apply`
+- **Serverless architecture** — Lambda + API Gateway v2 (HTTP API) + RDS PostgreSQL
+- **Secure CI/CD** — GitHub Actions with OIDC federation, zero stored AWS credentials
+- **Production observability** — 5 CloudWatch alarms on key SLIs, SNS email delivery, verified end-to-end
+- **Cost discipline** — AWS Budget guardrails, RDS stopped when idle
+
+---
 
 ## 🏗️ Architecture
 
-```
-Users → CloudFront (CDN) → S3 (Frontend)
-                         ↓
-                    API Gateway / ALB
-                         ↓
-                    Lambda / EC2 (API)
-                         ↓
-                    RDS PostgreSQL
-```
+![Architecture](docs/architecture.svg)
 
+**Request path:** User → S3 (static frontend) → API Gateway v2 → Lambda → RDS PostgreSQL
+**Alert path:** CloudWatch alarm breach → SNS topic → Email notification
+**Deploy path:** `git push` → GitHub Actions (OIDC auth) → `terraform apply`
 
+---
 
-## 🚀 Technologies
+## 🚀 Technology Stack
 
 ### Cloud Infrastructure
-- **AWS Services**: EC2, S3, RDS, Lambda, CloudFront, ALB, VPC, CloudWatch, IAM
-- **Infrastructure as Code**: Terraform (modular design)
-- **Containerization**: Docker
+- **Compute:** AWS Lambda (Node.js)
+- **API:** API Gateway v2 (HTTP API)
+- **Data:** RDS PostgreSQL
+- **Frontend hosting:** S3 static website
+- **Networking:** VPC, subnets, security groups
+- **IAM:** least-privilege roles per service
 
-### Development
-- **Backend**: Node.js / Python
-- **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
-- **Database**: PostgreSQL
-- **API**: RESTful design
+### DevOps & Observability
+- **IaC:** Terraform
+- **CI/CD:** GitHub Actions with OIDC federation
+- **Monitoring:** CloudWatch alarms + dashboards
+- **Alerting:** SNS → email
+- **Cost:** AWS Budgets
 
-### DevOps
-- **CI/CD**: GitHub Actions
-- **Security Scanning**: TFSec, Checkov, Trivy
-- **Cost Management**: Infracost, AWS Cost Explorer
-- **Monitoring**: CloudWatch, custom metrics
+### Application
+- **Backend:** Node.js Lambda handler
+- **Frontend:** Static HTML + JavaScript
+- **Database:** PostgreSQL with seeded library dataset
+
+---
 
 ## 📂 Project Structure
 
 ```
 library-finder-aws/
-├── frontend/              # Static website (S3 + CloudFront)
+├── frontend/                         # Static site (S3)
 ├── backend/
-│   ├── lambda/           # Serverless functions (Phase 1)
-│   ├── docker/           # Containerized API (Phase 2)
-│   └── api/              # Application code
+│   └── lambda/
+│       ├── search-api/               # Main API handler
+│       └── db-setup/                 # DB bootstrap
 ├── terraform/
-│   ├── modules/          # Reusable Terraform modules
-│   ├── phase1-serverless/    # Lambda + RDS implementation
-│   ├── phase2-containers/    # EC2 + Docker migration
-│   └── environments/         # Dev/Prod configurations
-├── docs/                 # Architecture docs & recordings
-├── scripts/              # Deployment & utility scripts
-└── .github/workflows/    # CI/CD pipelines
+│   └── phase1-serverless/
+│       ├── provider.tf
+│       ├── vpc.tf                    # VPC + subnets
+│       ├── security-groups.tf
+│       ├── rds.tf                    # PostgreSQL
+│       ├── s3.tf                     # Frontend bucket
+│       ├── lambda-search-api.tf      # Search Lambda
+│       ├── lambda.tf                 # DB setup Lambda
+│       ├── github-oidc.tf            # CI/CD IAM role
+│       ├── monitoring.tf             # CloudWatch + SNS
+│       ├── budget.tf                 # AWS Budget
+│       ├── variables.tf
+│       └── outputs.tf
+├── .github/workflows/                # CI/CD pipelines
+├── docs/
+│   └── architecture.svg              # Architecture diagram
+└── README.md
 ```
 
-## 🎬 Demo
-
-**Live Demo**: [Coming Soon]
-
-**Video Walkthrough**: [docs/recordings/](docs/recordings/)
+---
 
 ## 🛠️ Quick Start
 
 ### Prerequisites
-- AWS Account with IAM credentials configured
-- Terraform >= 1.6.0
-- AWS CLI >= 2.0
-- Node.js >= 18.0 (for local development)
+- AWS account with appropriate IAM permissions
+- Terraform ≥ 1.5
+- AWS CLI v2 configured
+- Node.js ≥ 18 (for local development)
 
-### Setup
+### Deployment
 
 ```bash
-# Clone repository
+# Clone the repository
 git clone https://github.com/mittal-jn/library-finder-aws.git
-cd library-finder-aws
+cd library-finder-aws/terraform/phase1-serverless
 
-# Configure AWS credentials
-aws configure
+# Set required variables in terraform.tfvars (gitignored)
+# See terraform.tfvars.example for the full list
 
-# Initialize Terraform
-cd terraform/phase1-serverless
+# Deploy
 terraform init
-
-# Review infrastructure plan
 terraform plan
-
-# Deploy infrastructure
 terraform apply
 ```
+
+After deployment, confirm the SNS email subscription from your inbox — alarms won't deliver until confirmed.
 
 ### Local Development
 
 ```bash
-# Frontend
-cd frontend
-# Open index.html in browser
-
-# Backend (Lambda - local testing)
+# Test the Lambda handler locally
 cd backend/lambda/search-api
 npm install
 npm test
 ```
 
-## 📊 Key Features
+---
 
-- ✅ **Location-based search** - Find libraries by city, state, or ZIP code
-- ✅ **Real-time results** - Fast searches using optimized database queries
-- ✅ **Comprehensive data** - Library name, address, website, and hours
-- ✅ **High availability** - Multi-AZ deployment with automatic failover
-- ✅ **Cost optimized** - ~$30-35/month using t3.micro instances
-- ✅ **Security hardened** - IAM roles, security groups, encryption at rest
-- ✅ **Monitored** - CloudWatch dashboards tracking 5+ AWS services
-- ✅ **Automated** - CI/CD pipeline with security scanning
+## 📊 Monitoring & Observability
+
+Five CloudWatch alarms cover the critical SLIs for a serverless API:
+
+| Alarm | Metric | Threshold |
+|---|---|---|
+| `lambda-errors` | Lambda Errors (sum) | > 0 per 5 min |
+| `lambda-duration-high` | Lambda Duration (avg) | > 80% of timeout |
+| `lambda-throttles` | Lambda Throttles (sum) | > 0 per 5 min |
+| `api-5xx-rate` | API Gateway `5xx / Count` | > 1% over 10 min |
+| `api-latency-p95` | API Gateway Latency (p95) | > 2000 ms over 10 min |
+
+All alarms publish to a single SNS topic with email subscription. Pipeline verified end-to-end via direct `aws sns publish` test.
+
+---
 
 ## 🔒 Security
 
-- **IAM roles** instead of access keys
-- **Encryption** at rest (RDS, S3)
-- **Security groups** with least-privilege access
-- **Automated scanning** with TFSec and Checkov
-- **Secret management** via AWS Secrets Manager
-- **HTTPS** enforced via CloudFront
+- **OIDC federation** — GitHub Actions assumes AWS IAM roles via short-lived tokens; no long-lived credentials stored as secrets
+- **Least-privilege IAM** — separate roles per Lambda, permissions scoped to required actions only
+- **Private networking** — RDS in private subnet, not publicly accessible
+- **Credential hygiene** — `terraform.tfvars` and state files gitignored; secrets passed via `TF_VAR_*` env vars
+- **Encryption** — RDS and S3 encrypted at rest
 
-## 💰 Cost Analysis
+---
 
-**Estimated monthly cost:** ~$30-35
+## 💰 Cost
 
-| Service | Cost/Month | Optimization |
-|---------|-----------|--------------|
-| EC2 (t3.micro) | ~$8 | Stop when not needed |
-| RDS (t3.micro) | ~$15 | Single-AZ for dev |
-| ALB | ~$16 | Required for HA |
-| S3 + CloudFront | <$1 | Free tier covers most |
-| Lambda + CloudWatch | $0 | Within free tier |
+Real monthly cost tracks close to **$0** when the environment is idle.
 
-**Cost saving strategies implemented:**
-- t3.micro instances (smallest production-viable size)
-- No NAT Gateway (save $30/month)
-- Single-AZ RDS for dev/demo
-- S3 lifecycle policies
-- CloudWatch log retention limits
+| Service | Active Cost | Idle Cost |
+|---|---|---|
+| RDS (db.t3.micro) | ~$12–15/mo | $0 (stopped) |
+| Lambda | < $0.01 | $0 |
+| API Gateway v2 | < $0.01 | $0 |
+| S3 static hosting | < $0.50 | < $0.50 |
+| CloudWatch alarms | ~$0.50/mo | ~$0.50/mo |
+| SNS (email) | $0 | $0 |
 
-## 📈 Monitoring & Observability
+**Cost controls in place:**
+- AWS Budget at $15/month with email alerts at 80% actual and 100% forecasted
+- RDS stopped when not in active development (dominant cost lever)
+- Free-tier coverage for Lambda, S3, and CloudWatch basic tier
 
-**CloudWatch Dashboards:**
-- EC2 CPU, memory, network metrics
-- RDS connections, query performance
-- Lambda invocation count, duration, errors
-- ALB request count, target health, response times
-- Custom application metrics
+---
 
-**Alarms configured for:**
-- High CPU utilization (>80%)
-- Database connection limits
-- API error rates (>5%)
-- Unhealthy targets
+## 🚀 Phase History
 
-## 🚀 Deployment Phases
+| Phase | Status | Scope |
+|---|---|---|
+| **2A** — Core infrastructure | ✅ Complete | VPC, subnets, security groups, RDS, S3, IAM |
+| **2B** — Search API | ✅ Complete | Lambda handler + API Gateway v2 (HTTP API), CORS |
+| **3** — CI/CD pipeline | ✅ Complete | GitHub Actions + OIDC federation |
+| **4** — Monitoring | ✅ Complete | 5 CloudWatch alarms + SNS + AWS Budget |
 
-### Phase 1: Serverless Foundation 
-- S3 static website
-- Lambda API functions
-- RDS PostgreSQL database
-- CloudWatch dashboards and alarms
+---
 
-### Phase 2: Container Migration
-- Migrate to EC2 + Docker
-- Application Load Balancer
-- Auto Scaling Groups
-- Enhanced monitoring
+## 🗺️ Roadmap (candidate next phases)
 
-### Phase 3: CI/CD Automation 
-- GitHub Actions workflows
-- Automated testing
-- Security scanning
-- Blue/green deployments
+- **CloudWatch Dashboard** — consolidated view of Lambda + API Gateway metrics
+- **X-Ray distributed tracing** — enable on Lambda and API Gateway for request-level observability
+- **Aurora Serverless v2 migration** — eliminate the RDS stop/start pattern, scale to zero
+- **API Gateway caching** — reduce Lambda invocations for repeat queries
+- **WAF integration** — rate limiting and common attack protection
 
-## 📚 Documentation
+---
 
-- [Architecture Overview](docs/architecture/)
-- [Deployment Guide](docs/runbooks/deployment.md)
-- [Disaster Recovery](docs/runbooks/disaster-recovery.md)
-- [Troubleshooting](docs/runbooks/troubleshooting.md)
-- [API Documentation](docs/api/)
+## 💡 Lessons Learned
 
-## 🤝 Contributing
+- **API Gateway v1 vs v2 metric dimensions differ** (`ApiName` vs `ApiId`, `5XXError` vs `5xx`). Getting this wrong causes alarms to silently never fire — Terraform will accept the config but metrics return no data.
+- **Migrating from Lambda Function URLs to API Gateway** solved CORS issues cleanly. Taught me to reason about the request boundary separately from the compute layer.
+- **OIDC federation** is one-time setup complexity for permanent security payoff — worth the extra hour on first config.
+- **Alarm `ok_actions`** are a free built-in test of the notification path — no need to simulate failures to verify the alert pipeline works.
 
-This is a portfolio project, but suggestions are welcome! Please open an issue to discuss proposed changes.
+---
+
+## 🎬 Demo
+
+**Video walkthrough:** _Coming soon_
+
+**Live app:** _Coming soon_
+
+---
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT — see [LICENSE](LICENSE).
+
+---
 
 ## 👤 Author
 
 **Mittal Jain**
 - GitHub: [@mittal-jn](https://github.com/mittal-jn)
-- LinkedIn: https://www.linkedin.com/in/mittaljain/
-- Portfolio: https://github.com/mittal-jn
-
-## 🙏 Acknowledgments
-
-- AWS Documentation and Best Practices
-- Terraform Registry for module patterns
-- HashiCorp Learn tutorials
-- AWS Solutions Architecture guides
+- LinkedIn: [linkedin.com/in/mittaljain](https://www.linkedin.com/in/mittaljain/)
 
 ---
 
-**⭐ Star this repo if you find it helpful!**
+## 🙏 Acknowledgments
 
-**📧 Questions?** Open an issue or reach out via LinkedIn.
+- AWS Documentation and Well-Architected Framework
+- HashiCorp Learn (Terraform tutorials)
+- Terraform AWS Provider registry
+
+---
+
+**⭐ Star this repo if you found it useful — feedback and suggestions welcome via GitHub Issues or LinkedIn.**
