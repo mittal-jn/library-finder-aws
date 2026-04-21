@@ -178,3 +178,22 @@ output "useful_commands" {
     describe_rds_instance = "aws rds describe-db-instances --db-instance-identifier ${aws_db_instance.main.identifier}"
   }
 }
+
+# ==========================================
+# API Gateway & Lambda Outputs
+# ==========================================
+
+output "api_gateway_url" {
+  description = "Base URL for the HTTP API"
+  value       = aws_apigatewayv2_stage.api.invoke_url
+}
+
+output "lambda_function_name" {
+  description = "Search API Lambda function name"
+  value       = aws_lambda_function.search_api.function_name
+}
+
+output "test_api_command" {
+  description = "Command to test the deployed API end-to-end"
+  value       = "curl ${aws_apigatewayv2_stage.api.invoke_url}"
+}
