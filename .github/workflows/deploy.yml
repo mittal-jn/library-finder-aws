@@ -1,0 +1,145 @@
+name: Deploy LibraryFinder
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # required for OIDC
+  contents: read
+  pull-requests: write  # for posting plan to PRs
+
+env:
+  AWS_REGION: us-east-1
+  TF_WORKING_DIR: terraform/phase1-serverless
+  LAMBDA_DIR: backend/lambda/search-api
+  LAMBDA_FUNCTION_NAME: library-finder-search-api-dev
+
+jobs:
+  terraform-plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.0
+
+      - name: Terraform Format Check
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform fmt -check -recursive
+        continue-on-error: true
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init
+
+      - name: Terraform Validate
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform validate
+
+      - name: Terraform Plan
+        id: plan
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          terraform plan -no-color -out=tfplan 2>&1 | tee plan.txt
+          echo "PLAN_EXIT_CODE=${PIPESTATUS[0]}" >> $GITHUB_ENV
+
+      - name: Upload plan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan
+          path: |
+            ${{ env.TF_WORKING_DIR }}/tfplan
+            ${{ env.TF_WORKING_DIR }}/plan.txt
+          retention-days: 7
+
+      - name: Job Summary
+        if: always()
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          echo "## 📋 Terraform Plan Summary" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          tail -n 30 plan.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ **Apply is manual** — run \`terraform apply\` locally after reviewing this plan." >> $GITHUB_STEP_SUMMARY
+
+  lambda-deploy:
+    name: Deploy Lambda
+    runs-on: ubuntu-latest
+    # Only deploy on push to main, not on PRs
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Lambda dependencies
+        working-directory: ${{ env.LAMBDA_DIR }}
+        run: |
+          if [ -f package.json ]; then
+            npm ci --omit=dev
+          fi
+
+      - name: Package Lambda
+        working-directory: ${{ env.LAMBDA_DIR }}
+        run: |
+          zip -r ../lambda-deploy.zip . -x "*.git*" "*.env*" "*test*"
+          ls -lh ../lambda-deploy.zip
+
+      - name: Deploy to AWS Lambda
+        working-directory: backend/lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+            --zip-file fileb://lambda-deploy.zip \
+            --publish \
+            --no-cli-pager
+
+      - name: Wait for update to complete
+        run: |
+          aws lambda wait function-updated \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }}
+
+      - name: Smoke test
+        run: |
+          aws lambda invoke \
+            --function-name ${{ env.LAMBDA_FUNCTION_NAME }} \
+            --payload '{"queryStringParameters":{"q":"test"}}' \
+            --cli-binary-format raw-in-base64-out \
+            --no-cli-pager \
+            response.json
+          cat response.json
+
+      - name: Deploy Summary
+        if: always()
+        run: |
+          echo "## 🚀 Lambda Deploy Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Function:** \`${{ env.LAMBDA_FUNCTION_NAME }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Region:** \`${{ env.AWS_REGION }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
