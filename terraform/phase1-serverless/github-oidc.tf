@@ -125,7 +125,8 @@ resource "aws_iam_policy" "github_actions" {
           "lambda:UpdateFunctionConfiguration",
           "lambda:GetFunction",
           "lambda:GetFunctionConfiguration",
-          "lambda:PublishVersion"
+          "lambda:PublishVersion",
+          "lambda:InvokeFunction"
         ]
         Resource = "arn:aws:lambda:*:*:function:${var.project_name}-*"
       },
