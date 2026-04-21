@@ -199,3 +199,15 @@ output "github_oidc_provider_arn" {
   value       = aws_iam_openid_connect_provider.github.arn
 }
 
+# -----------------------------------------------------------------------------
+# Attach AWS managed ReadOnlyAccess policy
+# -----------------------------------------------------------------------------
+# Terraform Plan needs to read AWS resources to refresh state and evaluate
+# data sources (e.g., data.aws_availability_zones). ReadOnlyAccess is AWS's
+# maintained read-only policy - standard for CI/audit roles.
+# -----------------------------------------------------------------------------
+
+resource "aws_iam_role_policy_attachment" "github_actions_readonly" {
+  role       = aws_iam_role.github_actions.name
+  policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
+}
