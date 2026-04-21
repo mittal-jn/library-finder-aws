@@ -203,9 +203,14 @@ Real monthly cost tracks close to **$0** when the environment is idle.
 
 ## 🎬 Demo
 
-**Video walkthrough:** _Coming soon_
+Full-stack application deployed and tested end-to-end:
 
-**Live app:** _Coming soon_
+- Frontend hosted on S3 (static HTML/JS)
+- API served by Lambda behind API Gateway v2
+- Data stored in PostgreSQL on RDS
+- Environment spun down between demos for cost control — available on request
+
+Screenshots: [see `/docs/screenshots/` — coming soon]
 
 ---
 

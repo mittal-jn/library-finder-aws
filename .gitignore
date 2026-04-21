@@ -274,3 +274,6 @@ _site/
 .env
 .env.local
 terraform/phase1-serverless/lambda-search-api.zip
+
+# Lambda invoke test output
+lambda-response.json
