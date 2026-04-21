@@ -176,3 +176,4 @@ variable "common_tags" {
     ManagedBy = "Terraform"
   }
 }
+
