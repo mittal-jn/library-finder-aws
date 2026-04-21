@@ -25,7 +25,7 @@ LibraryFinder is a cloud-native portfolio project that helps users discover publ
 
 ## 🏗️ Architecture
 
-![Architecture](docs/architecture.svg)
+![Architecture](docs/architecture/architecture.svg)
 
 **Request path:** User → S3 (static frontend) → API Gateway v2 → Lambda → RDS PostgreSQL
 **Alert path:** CloudWatch alarm breach → SNS topic → Email notification
