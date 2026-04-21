@@ -102,8 +102,12 @@ jobs:
       - name: Install Lambda dependencies
         working-directory: ${{ env.LAMBDA_DIR }}
         run: |
-          if [ -f package.json ]; then
+          if [ -f package-lock.json ]; then
             npm ci --omit=dev
+          elif [ -f package.json ]; then
+            npm install --omit=dev
+          else
+            echo "No package.json found, skipping dependency install"
           fi
 
       - name: Package Lambda
