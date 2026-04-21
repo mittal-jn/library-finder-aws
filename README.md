@@ -210,7 +210,19 @@ Full-stack application deployed and tested end-to-end:
 - Data stored in PostgreSQL on RDS
 - Environment spun down between demos for cost control — available on request
 
-Screenshots: [see `/docs/screenshots/` — coming soon]
+
+### Application UI
+
+Search by city returns real library data from RDS PostgreSQL via Lambda and API Gateway:
+
+![Search results showing TX libraries](docs/screenshots/search-results.png)
+
+### Monitoring in action
+
+5 CloudWatch alarms monitoring the serverless stack — all healthy:
+
+![CloudWatch alarms showing OK state](docs/screenshots/Cloudwatch-alarms.png)
+
 
 ---
 
