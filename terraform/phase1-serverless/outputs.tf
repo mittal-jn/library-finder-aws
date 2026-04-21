@@ -124,13 +124,13 @@ output "aws_account_id" {
 output "estimated_monthly_cost" {
   description = "Estimated monthly cost breakdown"
   value = {
-    rds_instance     = "~$15/month (db.t3.micro)"
-    s3_storage       = "<$1/month (under 5GB)"
-    nat_gateway      = var.enable_nat_gateway ? "~$30/month (enabled)" : "$0 (disabled)"
-    data_transfer    = "~$1-5/month (varies by usage)"
-    cloudwatch       = "$0 (free tier)"
-    total_min        = var.enable_nat_gateway ? "~$46/month" : "~$16/month"
-    total_max        = var.enable_nat_gateway ? "~$51/month" : "~$21/month"
+    rds_instance  = "~$15/month (db.t3.micro)"
+    s3_storage    = "<$1/month (under 5GB)"
+    nat_gateway   = var.enable_nat_gateway ? "~$30/month (enabled)" : "$0 (disabled)"
+    data_transfer = "~$1-5/month (varies by usage)"
+    cloudwatch    = "$0 (free tier)"
+    total_min     = var.enable_nat_gateway ? "~$46/month" : "~$16/month"
+    total_max     = var.enable_nat_gateway ? "~$51/month" : "~$21/month"
   }
 }
 
@@ -140,7 +140,7 @@ output "estimated_monthly_cost" {
 
 output "next_steps" {
   description = "What to do after infrastructure is deployed"
-  value = <<-EOT
+  value       = <<-EOT
   
   ✅ Infrastructure deployed successfully!
   
@@ -173,8 +173,8 @@ output "next_steps" {
 output "useful_commands" {
   description = "Useful AWS CLI commands for this infrastructure"
   value = {
-    sync_frontend_to_s3    = "aws s3 sync ./frontend s3://${aws_s3_bucket.frontend.id}/"
-    view_cloudwatch_logs   = "aws logs tail /aws/lambda/library-finder-search-api --follow"
-    describe_rds_instance  = "aws rds describe-db-instances --db-instance-identifier ${aws_db_instance.main.identifier}"
+    sync_frontend_to_s3   = "aws s3 sync ./frontend s3://${aws_s3_bucket.frontend.id}/"
+    view_cloudwatch_logs  = "aws logs tail /aws/lambda/library-finder-search-api --follow"
+    describe_rds_instance = "aws rds describe-db-instances --db-instance-identifier ${aws_db_instance.main.identifier}"
   }
 }

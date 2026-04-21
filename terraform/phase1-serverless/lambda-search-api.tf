@@ -99,26 +99,26 @@ resource "aws_apigatewayv2_api" "search_api" {
   protocol_type = "HTTP"
 
   cors_configuration {
-    allow_origins     = ["*"]
-    allow_methods     = ["GET", "POST", "OPTIONS"]
-    allow_headers     = ["*"]
-    expose_headers    = ["*"]
-    max_age           = 86400
+    allow_origins  = ["*"]
+    allow_methods  = ["GET", "POST", "OPTIONS"]
+    allow_headers  = ["*"]
+    expose_headers = ["*"]
+    max_age        = 86400
   }
 
   tags = {
-    Name        = "${var.project_name}-search-api-${var.environment}"
-    ManagedBy   = "Terraform"
+    Name      = "${var.project_name}-search-api-${var.environment}"
+    ManagedBy = "Terraform"
   }
 }
 
 # Lambda integration
 resource "aws_apigatewayv2_integration" "search_api" {
-  api_id             = aws_apigatewayv2_api.search_api.id
-  integration_type   = "AWS_PROXY"
-  integration_method = "POST"
+  api_id                 = aws_apigatewayv2_api.search_api.id
+  integration_type       = "AWS_PROXY"
+  integration_method     = "POST"
   payload_format_version = "2.0"
-  integration_uri    = aws_lambda_function.search_api.arn
+  integration_uri        = aws_lambda_function.search_api.arn
 }
 
 # Routes
@@ -147,7 +147,7 @@ resource "aws_lambda_permission" "api_gateway" {
 # Outputs
 output "search_api_url" {
   description = "HTTPS endpoint for search API via API Gateway"
-  value       = "${aws_apigatewayv2_stage.api.invoke_url}"
+  value       = aws_apigatewayv2_stage.api.invoke_url
 }
 
 output "search_api_function_name" {

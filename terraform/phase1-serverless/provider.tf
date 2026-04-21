@@ -3,7 +3,7 @@
 
 terraform {
   required_version = ">= 1.6.0"
-  
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -14,7 +14,7 @@ terraform {
       version = "~> 3.6"
     }
   }
-  
+
   # Uncomment after creating S3 bucket for state (Day 2)
   # backend "s3" {
   #   bucket         = "library-finder-terraform-state"
@@ -27,7 +27,7 @@ terraform {
 # AWS Provider Configuration
 provider "aws" {
   region = var.aws_region
-  
+
   # Default tags applied to all resources
   default_tags {
     tags = {

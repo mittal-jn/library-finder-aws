@@ -9,7 +9,7 @@ resource "aws_s3_bucket" "frontend" {
   bucket = "${var.project_name}-frontend-${random_id.suffix.hex}"
 
   tags = {
-    Name = "${var.project_name}-frontend-${var.environment}"
+    Name    = "${var.project_name}-frontend-${var.environment}"
     Purpose = "Frontend Static Website Hosting"
   }
 }
@@ -75,7 +75,7 @@ resource "aws_s3_bucket_website_configuration" "frontend" {
   }
 
   error_document {
-    key = "index.html"  # SPA routing - always serve index.html
+    key = "index.html" # SPA routing - always serve index.html
   }
 }
 
@@ -92,7 +92,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "frontend" {
 
     # Add filter to satisfy AWS requirement
     filter {
-      prefix = ""  # Apply to all objects
+      prefix = "" # Apply to all objects
     }
 
     noncurrent_version_transition {

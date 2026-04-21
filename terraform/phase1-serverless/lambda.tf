@@ -54,7 +54,7 @@ resource "aws_lambda_function" "db_setup" {
   role          = aws_iam_role.lambda_db_setup.arn
   handler       = "index.handler"
   runtime       = "nodejs20.x"
-  timeout       = 60  # Database operations can take time
+  timeout       = 60 # Database operations can take time
   memory_size   = 256
 
   # VPC Configuration - allows Lambda to access RDS
@@ -92,7 +92,7 @@ resource "aws_lambda_function" "db_setup" {
 
 resource "aws_cloudwatch_log_group" "lambda_db_setup" {
   name              = "/aws/lambda/${aws_lambda_function.db_setup.function_name}"
-  retention_in_days = 7  # Keep logs for 7 days (free tier)
+  retention_in_days = 7 # Keep logs for 7 days (free tier)
 
   tags = {
     Name = "${var.project_name}-lambda-db-setup-logs-${var.environment}"
